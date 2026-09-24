@@ -8,105 +8,162 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Feed">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#E3E4DF" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1A1B19" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&family=Silkscreen&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;700&family=Silkscreen&display=swap" rel="stylesheet">
 <style>
-  :root { --paper:#E3E4DF; --ink:#1B1C1A; --faded:#62635E; --rule:#B7B8B1; }
+  :root { --paper:#E3E4DF; --ink:#1B1C1A; --faded:#595A55; --rule:#B7B8B1; }
   @media (prefers-color-scheme: dark) {
-    :root { --paper:#1A1B19; --ink:#D9DAD4; --faded:#8E8F89; --rule:#3B3C39; }
+    :root { --paper:#1A1B19; --ink:#DCDDD7; --faded:#9A9B95; --rule:#3B3C39; }
   }
   * { box-sizing: border-box; }
   html { background: var(--paper); -webkit-text-size-adjust: 100%; }
   body {
     margin: 0; background: var(--paper); color: var(--ink);
-    font: 15px/1.5 "Atkinson Hyperlegible Mono", ui-monospace, Menlo, Consolas, monospace;
-    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+    font: 17px/1.45 "Atkinson Hyperlegible Next", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding-top: env(safe-area-inset-top, 0px);
   }
-  main { max-width: 23rem; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
-  .pixel { font-family: "Silkscreen", ui-monospace, Menlo, monospace; font-weight: 400; }
-  header { padding-bottom: 1rem; border-bottom: 2px solid var(--ink); }
-  header h1 { font-size: 1.75rem; line-height: 1.1; margin: 0 0 .25rem; }
-  header p { margin: 0; color: var(--faded); font-size: .8rem; }
-  #stale { background: var(--ink); color: var(--paper); padding: .6rem .75rem; margin: 0 0 1rem; font-size: .85rem; }
-  section { margin-top: 2rem; }
-  h2 { font-size: 1rem; margin: 0 0 .25rem; }
-  .post {
-    display: block; color: inherit; text-decoration: none;
-    padding: .7rem .5rem; margin: 0 -.5rem; border-bottom: 1px dotted var(--rule);
+  main { max-width: 34rem; margin: 0 auto; padding: 1.25rem 1.5rem 7rem; }
+  .pixel { font-family: "Silkscreen", ui-monospace, Menlo, monospace; font-weight: 400; letter-spacing: .02em; }
+  :focus { outline: none; }
+  :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+  /* Top strip: like the status line on an e-reader */
+  .strip { display: flex; justify-content: space-between; font-size: .8rem; color: var(--faded);
+           padding-bottom: .6rem; border-bottom: 1px solid var(--rule); margin-bottom: 1.5rem; }
+  #stale { background: var(--ink); color: var(--paper); padding: .75rem 1rem; margin: 0 0 1.25rem; }
+
+  /* Cover */
+  .cover { padding-top: 18vh; }
+  .cover h1 { font-size: clamp(2.4rem, 12vw, 3.4rem); line-height: 1; margin: 0 0 1rem; }
+  .meta { color: var(--faded); margin: 0; }
+  .count { margin: .25rem 0 0; }
+  .alert { background: var(--ink); color: var(--paper); padding: .75rem 1rem; margin: 2rem 0 0; }
+
+  /* Story pages */
+  h2 { font-size: 1.35rem; margin: 0 0 .5rem; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { border-bottom: 1px solid var(--rule); }
+  summary { list-style: none; cursor: pointer; padding: 1rem 2rem 1rem 0; position: relative; min-height: 44px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; position: absolute; right: .25rem; top: 1rem; color: var(--faded); font-size: 1.2rem; line-height: 1.2; }
+  details[open] summary::after { content: "\2212"; }
+  .src { display: block; font-size: .8rem; color: var(--faded); margin-bottom: .15rem; }
+  .hed { display: block; font-weight: 700; line-height: 1.3; }
+  .more { padding: 0 0 1.1rem; }
+  .more p { margin: 0 0 .6rem; }
+  .more a { color: inherit; text-underline-offset: .2em; }
+
+  /* End */
+  .end { padding-top: 18vh; }
+  .end h2 { font-size: 1.6rem; }
+  .notes p { margin: 2rem 0 0; color: var(--faded); font-size: .85rem; }
+
+  /* Page turning (only when JS runs; without it, everything shows as one list) */
+  .js .page[hidden] { display: none; }
+  nav { display: none; }
+  .js nav {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    position: fixed; left: 0; right: 0; bottom: 0; background: var(--paper);
+    border-top: 1px solid var(--rule);
+    padding: .75rem 1.5rem calc(.75rem + env(safe-area-inset-bottom, 0px));
   }
-  .post:hover, .post:focus-visible, .post:active { background: var(--ink); color: var(--paper); outline: none; }
-  .post:hover .src, .post:focus-visible .src, .post:active .src { color: var(--paper); }
-  .src { display: block; color: var(--faded); font-size: .75rem; }
-  .hed { display: block; font-weight: 700; }
-  .sum { display: block; margin-top: .2rem; font-size: .875rem; }
-  footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 2px solid var(--ink); }
-  footer .end { margin: 0; font-size: 1rem; }
-  footer .sub { margin: .25rem 0 0; color: var(--faded); font-size: .8rem; }
-  .notes p { margin: 1rem 0 0; color: var(--faded); font-size: .75rem; }
+  nav button {
+    font: inherit; font-weight: 700; color: var(--ink); background: none;
+    border: 2px solid var(--ink); padding: .6rem 1.25rem; min-width: 6.5rem; min-height: 48px; cursor: pointer;
+  }
+  nav button:active { background: var(--ink); color: var(--paper); }
+  nav button[disabled] { visibility: hidden; }
+  #where { color: var(--faded); font-size: .85rem; }
+
+  /* The one flourish: an e-ink style flash when the page turns */
+  .flash main { visibility: hidden; }
+  @media (prefers-reduced-motion: reduce) { .flash main { visibility: visible; } }
 </style>
 </head>
-<body data-generated="2026-09-24T04:22:31.512713+00:00">
+<body data-generated="2026-09-24T04:42:10.130401+00:00">
 <main>
   <p id="stale" hidden>This feed hasn't updated since Wed 23 Sep. Open the Actions tab on GitHub to see what broke.</p>
-  <header>
-    <h1 class="pixel">Wed 23 Sep</h1>
-    <p>Updated 9:22pm</p>
-  </header>
-<section><h2>World</h2>
-<a class="post" href="https://www.bbc.co.uk/news/articles/c6vgy0333dppo?at_medium=RSS&amp;at_campaign=rss"><span class="src">bbc</span><span class="hed">OpenAI agent &#x27;infiltrated&#x27; Australian government website, PM says</span><span class="sum">Albanese said he expressed &quot;concern&quot; to OpenAI founder Sam Altman, after authorities were informed three months after the breach in June.</span></a>
-<a class="post" href="https://www.bbc.co.uk/news/articles/c6gqdgg8w59xo?at_medium=RSS&amp;at_campaign=rss"><span class="src">bbc</span><span class="hed">AI superpower ambitions take centre stage as Trump and Xi meet</span><span class="sum">The US and China are vying for AI supremacy while seeking to keep it under human control.</span></a>
-<a class="post" href="https://www.bbc.co.uk/news/articles/cqvgyjy23ggjo?at_medium=RSS&amp;at_campaign=rss"><span class="src">bbc</span><span class="hed">Iran&#x27;s president tells Trump it will never &#x27;bend the knee&#x27;</span><span class="sum">Masoud Pezeshkian&#x27;s defiant speech to the UN comes after the US president threatened to &quot;annihilate&quot; Iran if a peace deal is not agreed soon.</span></a>
-<a class="post" href="https://www.bbc.co.uk/news/articles/cry8zwwq21pxo?at_medium=RSS&amp;at_campaign=rss"><span class="src">bbc</span><span class="hed">Ethiopia and Tigray accuse each of launching offensives, fuelling fears of new war</span><span class="sum">The local authorities reportedly seize Tigray&#x27;s airports following reports of recent drone strikes.</span></a>
-<a class="post" href="https://www.bbc.co.uk/news/articles/cwlyke0mm0x3o?at_medium=RSS&amp;at_campaign=rss"><span class="src">bbc</span><span class="hed">Trump&#x27;s Board of Peace unveils $2.45bn plan to begin Gaza&#x27;s reconstruction</span><span class="sum">The figure was announced during a meeting of the group&#x27;s board at the sidelines of the UN General Assembly in New York.</span></a>
-<a class="post" href="https://www.bbc.co.uk/news/articles/c6vgy55lm8z1o?at_medium=RSS&amp;at_campaign=rss"><span class="src">bbc</span><span class="hed">Dramatic eviction of woman aged 87 highlights Spain&#x27;s housing shortage</span><span class="sum">The tenant of the flat in Madrid, Maricarmen, was unable to pay the rent set by the firm which recently bought it.</span></a>
-<a class="post" href="https://www.bbc.co.uk/news/articles/cmvgy4237gq9o?at_medium=RSS&amp;at_campaign=rss"><span class="src">bbc</span><span class="hed">UK survivor of Canadian poison seller says he exploited her despair</span><span class="sum">Elisabeth Belien tells Kenneth Law&#x27;s sentencing hearing she took the poison when she was just 23 years old.</span></a>
-<a class="post" href="https://www.bbc.co.uk/news/articles/c670lydl5wg5o?at_medium=RSS&amp;at_campaign=rss"><span class="src">bbc</span><span class="hed">Dolly Parton&#x27;s manager accuses her nephew of &#x27;threats and intimidation&#x27;</span><span class="sum">Bryan Seaver, who announced Parton&#x27;s death to the world, is accused of trying to extort her estate.</span></a>
-</section>
-<section><h2>AI and tools</h2>
-<a class="post" href="https://www.theverge.com/tech/999750/muse-charm-meta-ai-hardware"><span class="src">verge</span><span class="hed">Meta is making a standalone Muse AI gadget</span><span class="sum">Meta is building a dedicated hardware device for its new Muse AI agent. The product, called Muse Charm, was briefly shown off by Meta CEO Mark Zuckerberg at the end of tonight&#x27;s Meta Connect presentat</span></a>
-<a class="post" href="https://www.theverge.com/tech/999673/meta-connect-2026-muse-glasses-features"><span class="src">verge</span><span class="hed">Muse is coming to Meta smart glasses</span><span class="sum">Just a couple of weeks after launching Muse, Meta announced that it&#x27;s &quot;working on&quot; bringing the agent to its smart glasses, including the new glasses it unveiled at Meta Connect. Users will be able to</span></a>
-<a class="post" href="https://www.theverge.com/tech/999281/ray-ban-meta-audio-glasses-meta-connect-2026"><span class="src">verge</span><span class="hed">Meta ditches the camera on its newest smart glasses</span><span class="sum">Walking around Meta Connect 2026, everyone&#x27;s sporting smart glasses in all sorts of shapes, colors, and sizes. It&#x27;s a marked difference here, a tech bubble where &quot;pervert glasses&quot; are not a concern. O</span></a>
-<a class="post" href="https://www.theverge.com/tech/999454/meta-muse-ai-agent-video-chat-connect-2026"><span class="src">verge</span><span class="hed">Meta is making Muse more powerful and will let you video chat with it, too</span><span class="sum">Meta is quickly iterating on its new Muse AI agent, announcing a bunch of updates today that make the bot more capable and able to chat with you in more ways. Muse agents are getting their own email a</span></a>
-<a class="post" href="https://www.theverge.com/tech/998480/meta-connect-2026-biggest-news-announcements"><span class="src">verge</span><span class="hed">Meta Connect 2026: The biggest news and announcements</span><span class="sum">It’s about time for Meta Connect, the company’s annual product launch event. This year, given the company’s major focus on AI and wearables like smart glasses, it seems likely that we’ll see updates f</span></a>
-<a class="post" href="https://www.theverge.com/tech/998457/meta-connect-2026-live-blog-mark-zuckerberg-keynote"><span class="src">verge</span><span class="hed">Meta Connect 2026 live blog: On the ground at Mark Zuckerberg’s next big product launch</span><span class="sum">It&#x27;s time once again for Meta&#x27;s annual September product launch event, and The Verge is on the ground in Menlo Park to cover the show live. Meta says that today&#x27;s keynote by Mark Zuckerberg will be ab</span></a>
-<a class="post" href="https://www.theverge.com/ai-artificial-intelligence/999526/meta-muse-ai-agent-hands-on-shopping"><span class="src">verge</span><span class="hed">Meta’s AI agent is a cute little guy who’s great at spending my money</span><span class="sum">Modern life comes with an unending, auto-populating to-do list. It never ceases to amaze me how I can be doing nothing at all, minding my own business, and suddenly something needs to be taken care of</span></a>
-<a class="post" href="https://www.theverge.com/policy/999412/data-center-water-electricity-disclosure-bills"><span class="src">verge</span><span class="hed">Data centers are black boxes, but California wants to change that</span><span class="sum">California Gov. Gavin Newsom signed a slate of bills on Monday that could finally give communities better data - and more say - on how data centers impact their electricity bills and water supply. As </span></a>
-</section>
-<section><h2>Culture</h2>
-<a class="post" href="https://www.pewresearch.org/short-reads/2026/09/23/americans-views-of-china-have-warmed-in-recent-years/"><span class="src">pew</span><span class="hed">Americans’ views of China have warmed in recent years</span><span class="sum">Americans’ feelings toward China have warmed since 2021, though views remain mostly cold, with sharp partisan and generational divides.</span></a>
-<a class="post" href="https://www.pewresearch.org/newsletter/religion-weekly/religion-weekly-update-sept-23-2026/"><span class="src">pew</span><span class="hed">Religion weekly update, Sept. 23, 2026</span><span class="sum">Religion &amp; Public Life A weekly digest of the Center’s latest research on religion and public life in the U.S. and around the world · Subscribe ↗ Media mentions 9 ways U.S. Mormons are changing, accor</span></a>
-<a class="post" href="https://www.pewresearch.org/short-reads/2026/09/23/prediction-markets-trading-volume-doubled-between-may-and-july-largely-driven-by-sports/"><span class="src">pew</span><span class="hed">Prediction markets’ trading volume doubled between May and July, largely driven by sports</span><span class="sum">Prediction market trading on Kalshi and Polymarket doubled from May to July, mostly due to a large uptick in sports trading.</span></a>
-<a class="post" href="https://www.pewresearch.org/short-reads/2026/09/22/americans-views-of-data-centers-have-turned-more-negative/"><span class="src">pew</span><span class="hed">Americans’ views of data centers have turned more negative</span><span class="sum">Americans’ views of data centers have turned more negative since January. But many are unsure or unfamiliar with them.</span></a>
-<a class="post" href="https://www.theatlantic.com/newsletters/2026/09/ai-financial-system-risk-banks/688763/?utm_source=feed"><span class="src">atlantic</span><span class="hed">AI’s Risk to Financial Systems</span><span class="sum">The tech may soon become an existential risk to humanity, but it’s already a risk to many Americans in a more mundane way: their banks.</span></a>
-<a class="post" href="https://www.theatlantic.com/technology/2026/09/china-ai-panic-doomerism/688761/?utm_source=feed"><span class="src">atlantic</span><span class="hed">China Has No Use for AI Doomerism</span><span class="sum">The country’s most prominent AI companies are focused on beating the U.S., no matter the cost.</span></a>
-<a class="post" href="https://www.theatlantic.com/newsletters/2026/09/trump-greenland-invasion-denmark-embassy-food/688760/?utm_source=feed"><span class="src">atlantic</span><span class="hed">My Night at the Reindeer-Sausage Buffet</span><span class="sum">What I learned at a “Taste of the Arctic” dinner at the Danish ambassador’s residence</span></a>
-<a class="post" href="https://www.theatlantic.com/international/2026/09/international-order-unga-trump/688753/?utm_source=feed"><span class="src">atlantic</span><span class="hed">The Makings of a Prewar World</span><span class="sum">President Trump’s speech to the United Nations clarifies the vision he shares with Vladimir Putin and Xi Jinping.</span></a>
-</section>
-  <footer>
-    <p class="end pixel">That's everything.</p>
-    <p class="sub">Back tomorrow morning.</p>
-    <div class="notes"><p>The curating step failed today, so these are raw headlines.</p><p>Didn&#x27;t load today: garbage day.</p></div>
-  </footer>
+  <div class="strip" aria-hidden="true"><span>Wed 23 Sep</span></div>
+<section class="page cover" data-label=""><h1 class="pixel" tabindex="-1">Wed 23 Sep</h1><p class="meta">Updated 9:42pm</p><p class="count">24 stories on 6 pages</p><p class="alert">The curating step failed, so these are raw headlines. Usually that means the API key or credit. Check the Actions log.</p></section>
+<section class="page" data-label="1 of 6"><h2 tabindex="-1">World</h2><ul><li><details><summary><span class="src">bbc</span><span class="hed">OpenAI agent &#x27;infiltrated&#x27; Australian government website, PM says</span></summary><div class="more"><p>Albanese said he expressed &quot;concern&quot; to OpenAI founder Sam Altman, after authorities were informed three months after the breach in June.</p><a href="https://www.bbc.co.uk/news/articles/c6vgy0333dppo?at_medium=RSS&amp;at_campaign=rss">Read on bbc</a></div></details></li><li><details><summary><span class="src">bbc us</span><span class="hed">Trump offers warm welcome as China&#x27;s Xi arrives for US visit</span></summary><div class="more"><p>The US treasury secretary said that the US and China had reached an agreement to extend a trade truce as Xi began his visit.</p><a href="https://www.bbc.co.uk/news/articles/cqgmrk7187lzo?at_medium=RSS&amp;at_campaign=rss">Read on bbc us</a></div></details></li><li><details><summary><span class="src">npr</span><span class="hed">Fears of return to war grow in Ethiopia&#x27;s Tigray region</span></summary><div class="more"><p>Fears are growing of a return to war in Ethiopia&#x27;s Tigray region, just four years after a devastating conflict ended in a fragile peace deal.</p><a href="https://www.npr.org/2026/09/24/nx-s1-5978861/conflict-ethiopia-tigray">Read on npr</a></div></details></li><li><details><summary><span class="src">guardian</span><span class="hed">Indian billionaire’s payments firm plots biggest London flotation in years</span></summary><div class="more"><p>Sunil Bharti Mittal’s Airtel Money targets $9bn IPO in boost for ailing UK stock market Nils Pratley: Does this mark the end of London’s listing drought? Not yet A payments business that operates acro</p><a href="https://www.theguardian.com/business/2026/sep/23/indian-billionaire-payments-firm-london-flotation-airtel-money">Read on guardian</a></div></details></li></ul></section>
+<section class="page" data-label="2 of 6"><h2 tabindex="-1">World</h2><ul><li><details><summary><span class="src">al jazeera</span><span class="hed">AI model Claude discovers CRISPR-like enzyme system, Anthropic says</span></summary><div class="more"><p>AI giant announces discovery amid global debate about how to safeguard against catastrophic risks.</p><a href="https://www.aljazeera.com/economy/2026/9/24/ai-model-claude-discovers-crispr-like-enzyme-system-anthropic-says?traffic_source=rss">Read on al jazeera</a></div></details></li><li><details><summary><span class="src">bbc</span><span class="hed">AI superpower ambitions take centre stage as Trump and Xi meet</span></summary><div class="more"><p>The US and China are vying for AI supremacy while seeking to keep it under human control.</p><a href="https://www.bbc.co.uk/news/articles/c6gqdgg8w59xo?at_medium=RSS&amp;at_campaign=rss">Read on bbc</a></div></details></li><li><details><summary><span class="src">bbc us</span><span class="hed">A red carpet and military flyover - How Trump welcomed Xi</span></summary><div class="more"><p>The two B-1 bombers that flew overhead are a key part of the US&#x27;s combat arsenal, and produce a notoriously loud roar when they pass by.</p><a href="https://www.bbc.co.uk/news/videos/c6804ne8knklo?at_medium=RSS&amp;at_campaign=rss">Read on bbc us</a></div></details></li><li><details><summary><span class="src">npr</span><span class="hed">Hurricane Polo fuels fears of landslides in Mexico as Nolo closes in on Hawaii</span></summary><div class="more"><p>Southwestern Mexico braced for heavy rain and mudslides after Polo became a major hurricane. Forecasters warned another system headed for Hawaii could cause catastrophic flooding later in the week.</p><a href="https://www.npr.org/2026/09/23/nx-s1-5979140/hurricane-polo-mexico-nolo-hawaii">Read on npr</a></div></details></li></ul></section>
+<section class="page" data-label="3 of 6"><h2 tabindex="-1">AI and tools</h2><ul><li><details><summary><span class="src">verge</span><span class="hed">Meta is making a standalone Muse AI gadget</span></summary><div class="more"><p>Meta is building a dedicated hardware device for its new Muse AI agent. The product, called Muse Charm, was briefly shown off by Meta CEO Mark Zuckerberg at the end of tonight&#x27;s Meta Connect presentat</p><a href="https://www.theverge.com/tech/999750/muse-charm-meta-ai-hardware">Read on verge</a></div></details></li><li><details><summary><span class="src">willison</span><span class="hed">Gemini 3.8 TTS Playground</span></summary><div class="more"><p>Tool: Gemini 3.8 TTS Playground Google released two new Gemini text-to-speech models today - gemini-3.8-flash-tts and gemini-3.8-flash-lite-tts . They come with a library of over 2,000 voices, plus th</p><a href="https://simonwillison.net/2026/Sep/23/gemini-tts-playground/">Read on willison</a></div></details></li><li><details><summary><span class="src">hn</span><span class="hed">Meta VR Glasses</span></summary><div class="more"><p>Article URL: https://www.meta.com/vr-glasses/ Comments URL: https://news.ycombinator.com/item?id=49824268 Points: 307 # Comments: 267</p><a href="https://www.meta.com/vr-glasses/">Read on hn</a></div></details></li><li><details><summary><span class="src">techcrunch</span><span class="hed">Everything new coming to Meta’s AI agent Muse</span></summary><div class="more"><p>CEO Mark Zuckerberg kicked off the company’s annual Connect event in Menlo Park on Wednesday with a keynote that made one thing clear: Meta is going all-in on Muse. It&#x27;s even coming to Meta&#x27;s AI glass</p><a href="https://techcrunch.com/2026/09/23/everything-new-coming-to-metas-ai-agent-muse/">Read on techcrunch</a></div></details></li></ul></section>
+<section class="page" data-label="4 of 6"><h2 tabindex="-1">AI and tools</h2><ul><li><details><summary><span class="src">hugging face</span><span class="hed">How to Use NVIDIA Warp and MjWarp to Accelerate Robotics Simulation and Learning Workflows</span></summary><div class="more"><a href="https://huggingface.co/blog/nvidia/how-to-use-nvidia-warp-and-mjwarp">Read on hugging face</a></div></details></li><li><details><summary><span class="src">verge</span><span class="hed">Muse is coming to Meta smart glasses</span></summary><div class="more"><p>Just a couple of weeks after launching Muse, Meta announced that it&#x27;s &quot;working on&quot; bringing the agent to its smart glasses, including the new glasses it unveiled at Meta Connect. Users will be able to</p><a href="https://www.theverge.com/tech/999673/meta-connect-2026-muse-glasses-features">Read on verge</a></div></details></li><li><details><summary><span class="src">willison</span><span class="hed">Shadow roots, explained with live examples</span></summary><div class="more"><p>Tool: Shadow roots, explained with live examples Prompt to Fable 5.1 Medium: Build an artifact to explain shadow roots in CSS with interactive examples Tags: css</p><a href="https://simonwillison.net/2026/Sep/23/shadow-roots/">Read on willison</a></div></details></li><li><details><summary><span class="src">hn</span><span class="hed">Linux support is coming to Snapdragon X2 Series</span></summary><div class="more"><p>Article URL: https://www.qualcomm.com/news/onq/2026/09/snapdragon-summit-agentic-ai-pcs-linux Comments URL: https://news.ycombinator.com/item?id=49823582 Points: 242 # Comments: 116</p><a href="https://www.qualcomm.com/news/onq/2026/09/snapdragon-summit-agentic-ai-pcs-linux">Read on hn</a></div></details></li></ul></section>
+<section class="page" data-label="5 of 6"><h2 tabindex="-1">Culture</h2><ul><li><details><summary><span class="src">pew</span><span class="hed">Americans’ views of China have warmed in recent years</span></summary><div class="more"><p>Americans’ feelings toward China have warmed since 2021, though views remain mostly cold, with sharp partisan and generational divides.</p><a href="https://www.pewresearch.org/short-reads/2026/09/23/americans-views-of-china-have-warmed-in-recent-years/">Read on pew</a></div></details></li><li><details><summary><span class="src">atlantic</span><span class="hed">AI’s Risk to Financial Systems</span></summary><div class="more"><p>The tech may soon become an existential risk to humanity, but it’s already a risk to many Americans in a more mundane way: their banks.</p><a href="https://www.theatlantic.com/newsletters/2026/09/ai-financial-system-risk-banks/688763/?utm_source=feed">Read on atlantic</a></div></details></li><li><details><summary><span class="src">vox</span><span class="hed">Trump is bracing to lose his latest fight with the press</span></summary><div class="more"><p>This story appeared in Today, Explained, a daily newsletter that helps you understand the most compelling news and stories of the day. Subscribe here. A hearing on President Donald Trump’s White House</p><a href="https://www.vox.com/today-explained-newsletter/503797/white-house-press-ban-hearing">Read on vox</a></div></details></li><li><details><summary><span class="src">npr culture</span><span class="hed">Greetings from Edinburgh, where a cheeky tour guide makes art history hilarious</span></summary><div class="more"><p>For anyone who grew up staring blankly at museum artwork, this is the fun that was missing: Coco leads interactive and (mostly) factual art history comedy tours.</p><a href="https://www.npr.org/2026/09/23/g-s1-142427/uk-coco-art-history-comedy-tour">Read on npr culture</a></div></details></li></ul></section>
+<section class="page" data-label="6 of 6"><h2 tabindex="-1">Culture</h2><ul><li><details><summary><span class="src">pew</span><span class="hed">Religion weekly update, Sept. 23, 2026</span></summary><div class="more"><p>Religion &amp; Public Life A weekly digest of the Center’s latest research on religion and public life in the U.S. and around the world · Subscribe ↗ Media mentions 9 ways U.S. Mormons are changing, accor</p><a href="https://www.pewresearch.org/newsletter/religion-weekly/religion-weekly-update-sept-23-2026/">Read on pew</a></div></details></li><li><details><summary><span class="src">atlantic</span><span class="hed">China Has No Use for AI Doomerism</span></summary><div class="more"><p>The country’s most prominent AI companies are focused on beating the U.S., no matter the cost.</p><a href="https://www.theatlantic.com/technology/2026/09/china-ai-panic-doomerism/688761/?utm_source=feed">Read on atlantic</a></div></details></li><li><details><summary><span class="src">vox</span><span class="hed">Can AI actually save lives?</span></summary><div class="more"><p>If there’s one thing that Americans can unite behind, it’s anxieties over artificial intelligence. According to a recent NBC News/Decision Desk poll, 70 percent of adults say they are personally more </p><a href="https://www.vox.com/podcasts/503589/ai-healthcare-patient-experience-drug-discovery">Read on vox</a></div></details></li><li><details><summary><span class="src">pew</span><span class="hed">Prediction markets’ trading volume doubled between May and July, largely driven by sports</span></summary><div class="more"><p>Prediction market trading on Kalshi and Polymarket doubled from May to July, mostly due to a large uptick in sports trading.</p><a href="https://www.pewresearch.org/short-reads/2026/09/23/prediction-markets-trading-volume-doubled-between-may-and-july-largely-driven-by-sports/">Read on pew</a></div></details></li></ul></section>
+<section class="page end" data-label=""><h2 class="pixel" tabindex="-1">That&#39;s everything.</h2><p class="meta">Back tomorrow morning.</p><div class="notes"><p>Didn&#x27;t load today: garbage day.</p></div></section>
 </main>
+<nav aria-label="Pages">
+  <button id="back" type="button">Back</button>
+  <span id="where" aria-live="polite"></span>
+  <button id="next" type="button">Next</button>
+</nav>
 <script>
+(function () {
   var made = new Date(document.body.dataset.generated);
   if (isNaN(made) || Date.now() - made > 30 * 3600 * 1000) {
     document.getElementById("stale").hidden = false;
   }
-  // Opened from the home screen, there's no pull-to-refresh.
-  // So when you come back to it after an hour away, it fetches the latest page.
+
+  document.documentElement.classList.add("js");
+  var pages = Array.prototype.slice.call(document.querySelectorAll(".page"));
+  var back = document.getElementById("back"), next = document.getElementById("next");
+  var where = document.getElementById("where");
+  var key = "page:" + document.body.dataset.generated, i = 0;
+  var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  try { i = Math.min(parseInt(localStorage.getItem(key), 10) || 0, pages.length - 1); } catch (e) {}
+
+  function show(n, turned) {
+    i = Math.max(0, Math.min(n, pages.length - 1));
+    pages.forEach(function (p, k) { p.hidden = k !== i; });
+    var label = pages[i].dataset.label || "";
+    where.textContent = label;
+    back.disabled = i === 0;
+    next.disabled = i === pages.length - 1;
+    next.textContent = i === 0 ? "Start" : "Next";
+    try { localStorage.setItem(key, i); } catch (e) {}
+    window.scrollTo(0, 0);
+    if (turned) {
+      var h = pages[i].querySelector("[tabindex='-1']");
+      if (h) h.focus({ preventScroll: true });
+      if (!still) {
+        document.body.classList.add("flash");
+        setTimeout(function () { document.body.classList.remove("flash"); }, 90);
+      }
+    }
+  }
+
+  back.addEventListener("click", function () { show(i - 1, true); });
+  next.addEventListener("click", function () { show(i + 1, true); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowRight") show(i + 1, true);
+    if (e.key === "ArrowLeft") show(i - 1, true);
+  });
+  var x0 = null, y0 = null;
+  document.addEventListener("touchstart", function (e) {
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener("touchend", function (e) {
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+    if (Math.abs(dx) > 60 && Math.abs(dy) < 50) show(dx < 0 ? i + 1 : i - 1, true);
+    x0 = null;
+  }, { passive: true });
+
+  show(i, false);
+
+  // From the home screen there's no pull-to-refresh, so reload after an hour away.
   var loaded = Date.now();
   document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState === "visible" && Date.now() - loaded > 3600 * 1000) {
-      location.reload();
-    }
+    if (document.visibilityState === "visible" && Date.now() - loaded > 3600 * 1000) location.reload();
   });
+})();
 </script>
 </body>
 </html>
